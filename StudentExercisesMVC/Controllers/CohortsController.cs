@@ -151,5 +151,31 @@ namespace StudentExercisesMVC.Controllers
                 return View();
             }
         }
+
+        private Cohort GetCohortById(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT c.Id, c.Name FROM Cohort c WHERE c.Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    Cohort cohort = null;
+
+                    if (reader.Read())
+                    {
+                        cohort = new Cohort
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name"))
+                        };
+                    }
+                    reader.Close();
+                    return cohort;
+                }
+            }
+        }
     }
 }

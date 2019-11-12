@@ -174,5 +174,45 @@ namespace StudentExercisesMVC.Controllers
                 return View();
             }
         }
+
+        // Helper method to get an instructor by their Id
+        private Instructor GetInstructorById(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT i.Id, i.FirstName, i.LastName, i.SlackHandle, i.Specialty, i.CohortId,
+                                        c.Name
+                                        FROM Instructor i LEFT JOIN Cohort c ON c.Id = i.CohortId
+                                        WHERE i.Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    Instructor instructor = null;
+
+                    if (reader.Read())
+                    {
+                        instructor = new Instructor
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            Specialty = reader.GetString(reader.GetOrdinal("Specialty")),
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                            Cohort = new Cohort
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Name = reader.GetString(reader.GetOrdinal("Name"))
+                            }
+                        };
+                    }
+
+                    reader.Close();
+                    return instructor;
+                }
+            }
+        }
     }
 }

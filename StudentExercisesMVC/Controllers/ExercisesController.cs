@@ -15,7 +15,7 @@ namespace StudentExercisesMVC.Controllers
     {
         private readonly IConfiguration _config;
 
-        public ExercisesController (IConfiguration config)
+        public ExercisesController(IConfiguration config)
         {
             _config = config;
         }
@@ -157,6 +157,36 @@ namespace StudentExercisesMVC.Controllers
             catch
             {
                 return View();
+            }
+        }
+
+        // Helper method to get an exercise by its Id
+        private Exercise GetExerciseById(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT Id, Name, Language FROM Exercise WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    Exercise exercise = null;
+
+                    if (reader.Read())
+                    {
+                        exercise = new Exercise
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            Language = reader.GetString(reader.GetOrdinal("Language"))
+                        };
+                    }
+
+                    reader.Close();
+                    return exercise;
+                }
             }
         }
     }
