@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using StudentExercisesMVC.Models;
+using StudentExercisesMVC.Models.ViewModels;
 
 namespace StudentExercisesMVC.Controllers
 {
@@ -109,16 +110,39 @@ namespace StudentExercisesMVC.Controllers
         // GET: Instructors/Create
         public ActionResult Create()
         {
-            return View();
+            var cohorts = GetAllCohorts();
+            var viewModel = new InstructorCreateViewModel()
+            {
+                Cohorts = cohorts
+            };
+
+            return View(viewModel);
         }
 
         // POST: Instructors/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create(InstructorCreateViewModel viewModel)
         {
             try
             {
+                var newInstructor = viewModel.Instructor;
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"INSERT INTO Instructor(FirstName, LastName, SlackHandle, Specialty,                                             CohortId)
+                                                VALUES(@firstName, @lastName, @slackHandle, @specialty, @cohortId)";
+                        cmd.Parameters.Add(new SqlParameter("@firstName", newInstructor.FirstName));
+                        cmd.Parameters.Add(new SqlParameter("@lastName", newInstructor.LastName));
+                        cmd.Parameters.Add(new SqlParameter("@slackHandle", newInstructor.SlackHandle));
+                        cmd.Parameters.Add(new SqlParameter("@specialty", newInstructor.Specialty));
+                        cmd.Parameters.Add(new SqlParameter("@cohortId", newInstructor.CohortId));
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
                 // TODO: Add insert logic here
 
                 return RedirectToAction(nameof(Index));
@@ -225,5 +249,33 @@ namespace StudentExercisesMVC.Controllers
                 }
             }
         }
+
+        private List<Cohort> GetAllCohorts()
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = "SELECT Id, Name FROM Cohort";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Cohort> cohorts = new List<Cohort>();
+                    while (reader.Read())
+                    {
+                        Cohort cohort = new Cohort
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name"))
+                        };
+
+                        cohorts.Add(cohort);
+                    }
+                    reader.Close();
+                    return cohorts;
+                }
+            }
+        }
+
     }
 }

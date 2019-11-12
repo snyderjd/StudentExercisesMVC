@@ -92,11 +92,20 @@ namespace StudentExercisesMVC.Controllers
         // POST: Cohorts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create(Cohort newCohort)
         {
             try
             {
-                // TODO: Add insert logic here
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "INSERT INTO Cohort (Name) VALUES (@name)";
+                        cmd.Parameters.Add(new SqlParameter("@name", newCohort.Name));
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return RedirectToAction(nameof(Index));
             }
@@ -109,17 +118,30 @@ namespace StudentExercisesMVC.Controllers
         // GET: Cohorts/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            Cohort cohort = GetCohortById(id);
+            return View(cohort);
         }
 
         // POST: Cohorts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(int id, Cohort updatedCohort)
         {
             try
             {
-                // TODO: Add update logic here
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"UPDATE Cohort
+                                        SET Name = @name
+                                        WHERE Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@name", updatedCohort.Name));
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return RedirectToAction(nameof(Index));
             }

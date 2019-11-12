@@ -100,11 +100,22 @@ namespace StudentExercisesMVC.Controllers
         // POST: Exercises/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public ActionResult Create(Exercise newExercise)
         {
             try
             {
-                // TODO: Add insert logic here
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "INSERT INTO Exercise (Name, Language) VALUES (@name, @language)";
+                        cmd.Parameters.Add(new SqlParameter("@name", newExercise.Name));
+                        cmd.Parameters.Add(new SqlParameter("@language", newExercise.Language));
+                        cmd.ExecuteNonQuery();
+                    }
+
+                }
 
                 return RedirectToAction(nameof(Index));
             }
@@ -117,17 +128,31 @@ namespace StudentExercisesMVC.Controllers
         // GET: Exercises/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            Exercise exercise = GetExerciseById(id);
+            return View(exercise);
         }
 
         // POST: Exercises/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(int id, Exercise updatedExercise)
         {
             try
             {
-                // TODO: Add update logic here
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"UPDATE Exercise
+                                        SET Name = @name, Language = @language
+                                        WHERE Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@name", updatedExercise.Name));
+                        cmd.Parameters.Add(new SqlParameter("@language", updatedExercise.Language));
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return RedirectToAction(nameof(Index));
             }
