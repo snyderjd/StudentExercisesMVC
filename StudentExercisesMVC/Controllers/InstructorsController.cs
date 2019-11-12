@@ -152,10 +152,11 @@ namespace StudentExercisesMVC.Controllers
             }
         }
 
-        // GET: Instructors/Delete/5
+        // GET: Instructors/Delete/5 - get the instructor you want to delete
         public ActionResult Delete(int id)
         {
-            return View();
+            Instructor instructor = GetInstructorById(id);
+            return View(instructor);
         }
 
         // POST: Instructors/Delete/5
@@ -165,7 +166,17 @@ namespace StudentExercisesMVC.Controllers
         {
             try
             {
-                // TODO: Add delete logic here
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"DELETE FROM Instructor WHERE id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return RedirectToAction(nameof(Index));
             }

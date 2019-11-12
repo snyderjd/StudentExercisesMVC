@@ -129,10 +129,11 @@ namespace StudentExercisesMVC.Controllers
             }
         }
 
-        // GET: Cohorts/Delete/5
+        // GET: Cohorts/Delete/5 - get the Cohort that you want to delete
         public ActionResult Delete(int id)
         {
-            return View();
+            Cohort cohort = GetCohortById(id);
+            return View(cohort);
         }
 
         // POST: Cohorts/Delete/5
@@ -142,7 +143,17 @@ namespace StudentExercisesMVC.Controllers
         {
             try
             {
-                // TODO: Add delete logic here
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"DELETE FROM Cohort WHERE id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return RedirectToAction(nameof(Index));
             }

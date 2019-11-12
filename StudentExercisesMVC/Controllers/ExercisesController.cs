@@ -137,10 +137,11 @@ namespace StudentExercisesMVC.Controllers
             }
         }
 
-        // GET: Exercises/Delete/5
+        // GET: Exercises/Delete/5 - get the exercise that you want to delete
         public ActionResult Delete(int id)
         {
-            return View();
+            Exercise exercise = GetExerciseById(id);
+            return View(exercise);
         }
 
         // POST: Exercises/Delete/5
@@ -150,7 +151,17 @@ namespace StudentExercisesMVC.Controllers
         {
             try
             {
-                // TODO: Add delete logic here
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"DELETE FROM Exercise WHERE id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return RedirectToAction(nameof(Index));
             }
