@@ -148,7 +148,9 @@ namespace StudentExercisesMVC.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM Cohort WHERE id = @id";
+                        cmd.CommandText = @"DELETE FROM Student WHERE CohortId = @id;
+                                            DELETE FROM Instructor WHERE CohortId = @id;
+                                            DELETE FROM Cohort WHERE id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
                         cmd.ExecuteNonQuery();
