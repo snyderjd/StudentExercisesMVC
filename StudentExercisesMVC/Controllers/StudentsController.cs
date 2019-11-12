@@ -154,17 +154,42 @@ namespace StudentExercisesMVC.Controllers
         // GET: Students/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            var cohorts = GetAllCohorts();
+            var student = GetById(id);
+
+            var viewModel = new StudentCreateViewModel()
+            {
+                Cohorts = cohorts,
+                Student = student
+            };
+            return View(viewModel);
         }
 
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(int id, StudentCreateViewModel viewModel)
         {
             try
             {
-                // TODO: Add update logic here
+                var updatedStudent = viewModel.Student;
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"UPDATE Student
+                                        SET FirstName = @firstName, LastName = @lastName, 
+                                            SlackHandle = @slackHandle, CohortId = @cohortId 
+                                        WHERE Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@firstName", updatedStudent.FirstName));
+                        cmd.Parameters.Add(new SqlParameter("@lastName", updatedStudent.LastName));
+                        cmd.Parameters.Add(new SqlParameter("@slackHandle", updatedStudent.SlackHandle));
+                        cmd.Parameters.Add(new SqlParameter("@cohortId", updatedStudent.CohortId));
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+                        cmd.ExecuteNonQuery();
+                    }
+                }
 
                 return RedirectToAction(nameof(Index));
             }
@@ -215,7 +240,7 @@ namespace StudentExercisesMVC.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle FROM Student s WHERE s.id = @id";
+                    cmd.CommandText = @"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, s.CohortId FROM Student s WHERE s.id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
                     Student student = null;
@@ -227,7 +252,8 @@ namespace StudentExercisesMVC.Controllers
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle"))
+                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId"))
                         };
 
                     }
