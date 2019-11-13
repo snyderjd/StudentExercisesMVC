@@ -156,19 +156,45 @@ namespace StudentExercisesMVC.Controllers
         // GET: Instructors/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            var cohorts = GetAllCohorts();
+            var instructor = GetInstructorById(id);
+            var viewModel = new InstructorCreateViewModel()
+            {
+                Cohorts = cohorts,
+                Instructor = instructor
+            };
+
+            return View(viewModel);
         }
 
         // POST: Instructors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(int id, InstructorCreateViewModel viewModel)
         {
             try
             {
-                // TODO: Add update logic here
-
-                return RedirectToAction(nameof(Index));
+                var updatedInstructor = viewModel.Instructor;
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = @"UPDATE Instructor
+                                            SET FirstName = @firstName, LastName = @lastName,
+                                                SlackHandle = @slackHandle, Specialty = @specialty,
+                                                CohortId = @cohortId
+                                            WHERE Id = @id";
+                        cmd.Parameters.Add(new SqlParameter("@firstName", updatedInstructor.FirstName));
+                        cmd.Parameters.Add(new SqlParameter("@lastName", updatedInstructor.LastName));
+                        cmd.Parameters.Add(new SqlParameter("@slackHandle", updatedInstructor.SlackHandle));
+                        cmd.Parameters.Add(new SqlParameter("@specialty", updatedInstructor.Specialty));
+                        cmd.Parameters.Add(new SqlParameter("@cohortId", updatedInstructor.CohortId));
+                        cmd.Parameters.Add(new SqlParameter("@id", id));
+                        cmd.ExecuteNonQuery();
+                    }
+                    return RedirectToAction(nameof(Index));
+                }
             }
             catch
             {
