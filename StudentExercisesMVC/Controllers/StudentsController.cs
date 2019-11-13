@@ -75,35 +75,54 @@ namespace StudentExercisesMVC.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, s.CohortId,
-                                               c.Id, c.Name
-                                        FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id 
-                                        WHERE s.id = @id";
+                    cmd.CommandText = @"SELECT s.Id as 'TheStudentId', s.FirstName, s.LastName, s.SlackHandle,                              s.CohortId, 
+                                               c.Id as 'TheCohortId', c.Name as 'CohortName', 
+                                            se.ExerciseId, e.Name as 'ExerciseName', e.Language
+                                        FROM Student s LEFT JOIN Cohort c ON s.CohortId = c.Id
+                                        LEFT JOIN StudentExercise se ON se.StudentId = s.Id
+                                        LEFT JOIN Exercise e ON se.ExerciseId = e.Id
+                                        WHERE s.Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
-                    Student student = null;
 
-                    if (reader.Read())
+                    Dictionary<int, Student> students = new Dictionary<int, Student>();
+                    while (reader.Read())
                     {
-                        student = new Student
+                        int studentId = reader.GetInt32(reader.GetOrdinal("TheStudentId"));
+                        if (!students.ContainsKey(studentId))
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                            Cohort = new Cohort
+                            Student newStudent = new Student
                             {
-                                Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
-                                Name = reader.GetString(reader.GetOrdinal("Name"))
-                            }
-                        };
-                        
+                                Id = reader.GetInt32(reader.GetOrdinal("TheStudentId")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
+                                CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                Cohort = new Cohort
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("CohortId")),
+                                    Name = reader.GetString(reader.GetOrdinal("CohortName"))
+                                }
+                            };
+
+                            students.Add(studentId, newStudent);
+                        }
+
+                        Student fromDictionary = students[studentId];
+
+                        if (!reader.IsDBNull(reader.GetOrdinal("ExerciseId")))
+                        {
+                            Exercise exercise = new Exercise
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("ExerciseId")),
+                                Name = reader.GetString(reader.GetOrdinal("ExerciseName")),
+                                Language = reader.GetString(reader.GetOrdinal("Language"))
+                            };
+                            fromDictionary.Exercises.Add(exercise);
+                        }
                     }
-
                     reader.Close();
-                    return View(student);
-
+                    return View(students.Values.First());
                 }
             }
         }

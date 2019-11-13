@@ -46,7 +46,24 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.SlackHandle)
         </dd>
+
     </dl>
+    <div>
+        <h4>
+            Assigned Exercises
+        </h4>
+        @foreach (Exercise exercise in Model.Exercises)
+        {
+            <p>Exercise</p>
+            <p>
+               Name: @Html.DisplayFor(model => exercise.Name)
+            </p>
+            <p>
+               Language: @Html.DisplayFor(model => exercise.Language)
+            </p>
+        }
+    </div>
+        
 </div>
 <div>
     @Html.ActionLink("Edit", "Edit", new { /* id = Model.PrimaryKey */ }) |
