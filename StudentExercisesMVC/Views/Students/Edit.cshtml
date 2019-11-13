@@ -1,4 +1,4 @@
-﻿@model StudentExercisesMVC.Models.ViewModels.StudentCreateViewModel
+﻿@model StudentExercisesMVC.Models.ViewModels.StudentEditViewModel
 
 @{
     ViewData["Title"] = "Edit";
@@ -31,6 +31,12 @@
                 <label asp-for="Cohorts" class="control-label"></label>
                 <select asp-for="Student.CohortId" asp-items="@Model.CohortOptions"></select>
             </div>
+            <div class="form-group">
+                <label asp-for="Cohorts" class="control-label"></label>
+                <select asp-for="@Model.ExerciseIds" asp-items="@Model.ExerciseOptions"></select>
+            </div>
+            
+
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
             </div>

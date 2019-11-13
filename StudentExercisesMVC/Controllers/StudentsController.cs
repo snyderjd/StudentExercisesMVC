@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using StudentExercisesMVC.Models;
@@ -174,23 +175,32 @@ namespace StudentExercisesMVC.Controllers
         public ActionResult Edit(int id)
         {
             var cohorts = GetAllCohorts();
+            var exercises = GetAllExercises();
+            var exerciseSelectItems = exercises.Select(e => new SelectListItem(e.Name, e.Id.ToString())).ToList();
+
+            MultiSelectList exerciseOptions = new MultiSelectList(exerciseSelectItems);
+            
             var student = GetById(id);
 
-            var viewModel = new StudentCreateViewModel()
+            var viewModel = new StudentEditViewModel()
             {
                 Cohorts = cohorts,
-                Student = student
+                Student = student,
+                ExerciseOptions = exerciseSelectItems,
+                Exercises = exercises
             };
+
             return View(viewModel);
         }
 
         // POST: Students/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, StudentCreateViewModel viewModel)
+        public ActionResult Edit(int id, StudentEditViewModel viewModel)
         {
             try
             {
+                var assignedExercises = viewModel.ExerciseIds;
                 var updatedStudent = viewModel.Student;
                 using (SqlConnection conn = Connection)
                 {
@@ -200,11 +210,14 @@ namespace StudentExercisesMVC.Controllers
                         cmd.CommandText = @"UPDATE Student
                                         SET FirstName = @firstName, LastName = @lastName, 
                                             SlackHandle = @slackHandle, CohortId = @cohortId 
-                                        WHERE Id = @id";
+                                        WHERE Id = @id;
+                                        INSERT INTO StudentExercise(StudentId, ExerciseId)
+                                        VALUES (@id, @exerciseId)";
                         cmd.Parameters.Add(new SqlParameter("@firstName", updatedStudent.FirstName));
                         cmd.Parameters.Add(new SqlParameter("@lastName", updatedStudent.LastName));
                         cmd.Parameters.Add(new SqlParameter("@slackHandle", updatedStudent.SlackHandle));
                         cmd.Parameters.Add(new SqlParameter("@cohortId", updatedStudent.CohortId));
+                        cmd.Parameters.Add(new SqlParameter("@exerciseId", assignedExercises[0]));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
                         cmd.ExecuteNonQuery();
                     }
@@ -308,6 +321,37 @@ namespace StudentExercisesMVC.Controllers
 
                     reader.Close();
                     return cohorts;
+                }
+            }
+        }
+
+        private List<Exercise> GetAllExercises()
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT Id, Name, Language FROM Exercise";
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Exercise> exercises = new List<Exercise>();
+                    Exercise exercise = null;
+
+                    while (reader.Read())
+                    {
+                        exercise = new Exercise
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            Language = reader.GetString(reader.GetOrdinal("Language"))
+                        };
+
+                        exercises.Add(exercise);
+                    }
+                    reader.Close();
+
+                    return exercises;
                 }
             }
         }
