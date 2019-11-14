@@ -174,6 +174,7 @@ namespace StudentExercisesMVC.Controllers
         // GET: Students/Edit/5
         public ActionResult Edit(int id)
         {
+            // Get all cohorts and exercises
             var cohorts = GetAllCohorts();
             var exercises = GetAllExercises();
 
@@ -182,7 +183,7 @@ namespace StudentExercisesMVC.Controllers
             var assignedExercises = GetAssignedExercises(id);
             List<int> exerciseIds = new List<int>();
 
-            // Mark all of the student's currently-assigned exercises as Selected
+            // Mark all of the student's currently-assigned exercises as Selected and add the exerciseId to the exerciseIds list
             foreach (SelectListItem e in exerciseSelectItems)
             {
                 if (assignedExercises.Any(assigned => assigned.Id == int.Parse(e.Value)))
@@ -192,10 +193,12 @@ namespace StudentExercisesMVC.Controllers
                 }
             }
 
+            // Create MultiSelectList with the list of exercise SelectListItems
             MultiSelectList exerciseOptions = new MultiSelectList(exerciseSelectItems);
 
             var student = GetById(id);
 
+            // Create the ViewModel that will be passed to the Edit View
             var viewModel = new StudentEditViewModel()
             {
                 Cohorts = cohorts,
@@ -215,6 +218,7 @@ namespace StudentExercisesMVC.Controllers
         {
             try
             {
+                // Get a reference to the viewModel's ExerciseIds and Student
                 var assignedExercises = viewModel.ExerciseIds;
                 var updatedStudent = viewModel.Student;
                 using (SqlConnection conn = Connection)
@@ -222,7 +226,7 @@ namespace StudentExercisesMVC.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        // Loop over the list of assigned exerciseIds and create SQL string that will assign the exercise to the student if it hasn't already been assigned
+                        // Loop over the list of assigned exerciseIds and create SQL string that will assign the exercise to the student if it hasn't already been assigned.
                         string sqlQuery = "DELETE FROM StudentExercise WHERE StudentId = @id;";
 
                         for (int i = 0; i < assignedExercises.Count(); i++)
@@ -232,6 +236,7 @@ namespace StudentExercisesMVC.Controllers
                             cmd.Parameters.Add(new SqlParameter($"@exercise{i}", assignedExercises[i]));
                         }
 
+                        // Build the CommandText and add SqlParameter's to edit any of the other Student properties
                         cmd.CommandText = $@"
                                         UPDATE Student
                                         SET FirstName = @firstName, LastName = @lastName, 
@@ -245,7 +250,6 @@ namespace StudentExercisesMVC.Controllers
                         cmd.Parameters.Add(new SqlParameter("@slackHandle", updatedStudent.SlackHandle));
                         cmd.Parameters.Add(new SqlParameter("@cohortId", updatedStudent.CohortId));
                         cmd.Parameters.Add(new SqlParameter("@id", id));
-                        cmd.Parameters.Add(new SqlParameter("@sqlQuery", sqlQuery));
                         cmd.ExecuteNonQuery();
                     }
                 }
