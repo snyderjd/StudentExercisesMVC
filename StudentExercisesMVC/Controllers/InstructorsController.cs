@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using StudentExercisesMVC.Models;
@@ -158,11 +159,24 @@ namespace StudentExercisesMVC.Controllers
         {
             var cohorts = GetAllCohorts();
             var instructor = GetInstructorById(id);
-            var viewModel = new InstructorCreateViewModel()
+            var viewModel = new InstructorEditViewModel()
             {
                 Cohorts = cohorts,
                 Instructor = instructor
             };
+
+            foreach(SelectListItem cohortSelectItem in viewModel.CohortOptions)
+            {
+                if (int.Parse(cohortSelectItem.Value) == viewModel.Instructor.CohortId)
+                {
+                    //cohortSelectItem.Selected = true;
+                }
+                    //if (assignedExercises.Any(assigned => assigned.Id == int.Parse(e.Value)))
+                    //{
+                    //    e.Selected = true;
+                    //    exerciseIds.Add(int.Parse(e.Value));
+                    //}
+            }
 
             return View(viewModel);
         }
@@ -170,7 +184,7 @@ namespace StudentExercisesMVC.Controllers
         // POST: Instructors/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, InstructorCreateViewModel viewModel)
+        public ActionResult Edit(int id, InstructorEditViewModel viewModel)
         {
             try
             {

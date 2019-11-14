@@ -32,8 +32,8 @@
                 <select asp-for="Student.CohortId" asp-items="@Model.CohortOptions"></select>
             </div>
             <div class="form-group">
-                <label asp-for="Exercises" class="control-label"></label>
-                <select asp-for="@Model.ExerciseIds" asp-items="@Model.ExerciseOptions"></select>
+                <label asp-for="@Model.ExerciseIds" class="control-label"></label>
+                <select multiple asp-for="@Model.ExerciseIds" asp-items="@Model.ExerciseOptions"></select>
             </div>
             @*@Html.ListBoxFor(exercise => Model.ExerciseIds, Model.ExerciseOptions)*@
 
