@@ -176,14 +176,19 @@ namespace StudentExercisesMVC.Controllers
         {
             var cohorts = GetAllCohorts();
             var exercises = GetAllExercises();
+
+            // Create SelectListItems for all of the exercises
             var exerciseSelectItems = exercises.Select(e => new SelectListItem(e.Name, e.Id.ToString())).ToList();
             var assignedExercises = GetAssignedExercises(id);
+            List<int> exerciseIds = new List<int>();
 
+            // Mark all of the student's currently-assigned exercises as Selected
             foreach (SelectListItem e in exerciseSelectItems)
             {
                 if (assignedExercises.Any(assigned => assigned.Id == int.Parse(e.Value)))
                 {
                     e.Selected = true;
+                    exerciseIds.Add(int.Parse(e.Value));
                 }
             }
 
@@ -196,7 +201,8 @@ namespace StudentExercisesMVC.Controllers
                 Cohorts = cohorts,
                 Student = student,
                 ExerciseOptions = exerciseSelectItems,
-                Exercises = exercises
+                Exercises = exercises,
+                ExerciseIds = exerciseIds
             };
 
             return View(viewModel);

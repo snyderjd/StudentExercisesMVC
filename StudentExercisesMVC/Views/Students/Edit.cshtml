@@ -35,7 +35,7 @@
                 <label asp-for="Cohorts" class="control-label"></label>
                 <select asp-for="@Model.ExerciseIds" asp-items="@Model.ExerciseOptions"></select>
             </div>
-            
+            @*@Html.ListBoxFor(exercise => Model.ExerciseIds, Model.ExerciseOptions)*@
 
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />
